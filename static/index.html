@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shell Playground</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#run').click(function () {
+                const code = $('#code').val();
+                $('#output').text('Running...').removeClass('error');
+                $.post('/run', {code: code}, function (data) {
+                    $('#output').text(data);
+                }).fail(function () {
+                    $('#output').text('Error running the code.').addClass('error');
+                });
+            });
+
+            // Allow pressing Ctrl + Enter to run the code
+            $('#code').on('keypress', function (e) {
+                if (e.which === 13 && e.ctrlKey) {
+                    $('#run').click();
+                    e.preventDefault(); // Prevent newline in textarea
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+<div class="container">
+    <h1>Shell Playground</h1>
+    <textarea id="code" placeholder="Write your shell code here..." spellcheck="false"></textarea>
+    <button id="run">Run</button>
+    <div id="output" class="output"></div>
+</div>
+</body>
+</html>
