@@ -8,30 +8,64 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
+            // 更新行号
+            function updateLineNumbers() {
+                const code = $('#code').val();
+                const lines = code.split("\n").length;
+                let lineNumberHTML = '';
+                for (let i = 0; i <= lines; i++) {
+                    lineNumberHTML += i + '<br>';
+                }
+                $('#line-numbers').html(lineNumberHTML);
+            }
+
+            // 同步行号滚动与代码滚动
+            $('#code').on('scroll', function () {
+                $('#line-numbers').scrollTop($(this).scrollTop());
+            });
+
+            // 当输入内容变化时，更新行号
+            $('#code').on('input', function () {
+                updateLineNumbers();
+            });
+
+            // 运行按钮点击事件
             $('#run').click(function () {
                 const code = $('#code').val();
                 $('#output').text('Running...').removeClass('error');
                 $.post('/run', {code: code}, function (data) {
-                    $('#output').text(data);
-                }).fail(function () {
-                    $('#output').text('Error running the code.').addClass('error');
+                    // 显示大量数据时使用<pre>标签并限制最大高度
+                    if (typeof data === 'object') {
+                        $('#output').html('<pre>' + JSON.stringify(data, null, 2) + '</pre>');
+                    } else {
+                        $('#output').html('<pre>' + data + '</pre>');
+                    }
+                }).fail(function (xhr, status, error) {
+                    // 显示具体的错误信息
+                    $('#output').html('<pre>Error: ' + xhr.responseText + '</pre>').addClass('error');
                 });
             });
 
-            // Allow pressing Ctrl + Enter to run the code
+            // 允许按下Ctrl + Enter来运行代码
             $('#code').on('keypress', function (e) {
                 if (e.which === 13 && e.ctrlKey) {
                     $('#run').click();
-                    e.preventDefault(); // Prevent newline in textarea
+                    e.preventDefault(); // 防止textarea中换行
                 }
             });
+
+            // 初始更新行号
+            updateLineNumbers();
         });
     </script>
 </head>
 <body>
 <div class="container">
     <h1>Shell Playground</h1>
-    <textarea id="code" placeholder="Write your shell code here..." spellcheck="false"></textarea>
+    <div id="editor-container">
+        <div id="line-numbers" class="line-numbers"></div>
+        <textarea id="code" placeholder="Write your shell code here..." spellcheck="false"></textarea>
+    </div>
     <button id="run">Run</button>
     <div id="output" class="output"></div>
 </div>
